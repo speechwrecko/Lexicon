@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lexicon Search</title>
+</head>
+<body>
+
+<form method=post action="">
+
+   <div align="left">
+        <h1>Lexicon Search</h1>
+        <h2></h2>
+       <p></p>
+
+
+
+        Enter a word:
+        {{ form.r }}
+        <input type=submit name = btn value=search>
+
+      <p></p><hr><p></p>
+
+    Enter a new word: {{ form.w }}
+        &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Enter a Spelling: {{ form.p }}
+        <input type=submit name = btn value=add>
+
+<p></p>
+<a href="/download/">Download Updates</a>
+
+        <p></p>
+        {% if s != None %}
+        <! .. {{s}} .. >
+
+        <section>
+            <style>
+  table { border-collapse: collapse; border: solid thin; }
+  colgroup, tbody { border: solid medium; }
+  th { border: solid thin; height: 10px; width: 500px; text-align: left; padding: 15px; background-color: #00b8de;  color: white;}
+  td { border: solid thin; height: 10px; width: 500px; text-align: left; padding: 15px; }
+  tr:nth-child(even){background-color: #f2f2f2}
+
+            </style>
+            <table>
+                <tr>
+                    <th>word</th>
+                    <th>spelling</th>
+                </tr>
+                {% for i in s %}
+                <tr>
+                    <td>
+                        {{i[0]}}
+                    </td>
+                    <td>
+                        {{i[1]}}
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </section>
+        <p></p>
+        {% endif %}
+    </div>
+
+</form>
+
+</body>
+</html>
