@@ -45,6 +45,7 @@ def download():
 # View
 @app.route('/lexicon', methods=['GET', 'POST'])
 def index():
+    missing_words = []
     db = LoadLexicon('DB\lexicon_3_28_17.db')
     form = InputForm(request.form)
     if request.method == 'POST':  # and form.validate():
@@ -83,20 +84,23 @@ def index():
                 file_list = list(reader)
                 f.close()
             for files in file_list:
-                out = compute(files[0], db)
-                if len(out) == 0:
-                    with open('eggs.csv', 'w') as csvfile:
-                        spamwriter = csv.writer(csvfile, dialect=csv.excel_tab)
-                        spamwriter.writerow([files[0]])
-                        csvfile.close()
-                        # We need to modify the response, so the first thing we
-                        # need to do is create a response out of the CSV string
-                        response = make_response(open('eggs.csv').read())
-                        # This is the key: Set the right header for the response
-                        # to be downloaded, instead of just printed on the browser
-                        response.headers["Content-Disposition"] = "attachment; filename=eggs.csv"
-                        redirect(url_for('index', ))
-                        return response
+                words = ' '.join(files).split(' ')
+                for word in words:
+                    out = compute(word, db)
+                    if len(out) == 0:
+                        missing_words.append(word)
+            with open('eggs.csv', 'w', newline='') as csvfile:
+                spamwriter = csv.writer(csvfile, dialect=csv.excel_tab)
+                spamwriter.writerows(missing_words)
+                csvfile.close()
+                # We need to modify the response, so the first thing we
+                # need to do is create a response out of the CSV string
+                response = make_response(open('eggs.csv').read())
+                # This is the key: Set the right header for the response
+                # to be downloaded, instead of just printed on the browser
+                response.headers["Content-Disposition"] = "attachment; filename=eggs.csv"
+                redirect(url_for('index', ))
+                return response
 
     else:
         r = None
