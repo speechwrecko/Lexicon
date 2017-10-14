@@ -1,11 +1,13 @@
 import sqlite3
 import csv
 
+
 def InsertRow(db, row):
     cursor2 = db.cursor()
     cursor2.execute('insert into lexicon values (?,?,?,?)', (row[0], row[1], row[2], row[3]))
     db.commit();
     return
+
 
 def ExportCSV(db):
     csv_cursor = db.cursor()

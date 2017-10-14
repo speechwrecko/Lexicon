@@ -8,25 +8,34 @@
 
 <form method=post action="">
 
-   <div align="left">
+    <div align="left">
         <h1>Lexicon Search</h1>
         <h2></h2>
-       <p></p>
-
+        <p></p>
 
 
         Enter a word:
         {{ form.r }}
-        <input type=submit name = btn value=search>
+        <input type=submit name=btn value=search>
 
-      <p></p><hr><p></p>
+        <p></p>
 
-    Enter a new word: {{ form.w }}
+        Bulk Upload:
+        {{ form.g }}
+        <input type=submit name=btn value=open>
+        <input type=submit name=btn value=submit>
+
+
+        <p></p>
+        <hr>
+        <p></p>
+
+        Enter a new word: {{ form.w }}
         &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; Enter a Spelling: {{ form.p }}
-        <input type=submit name = btn value=add>
+        <input type=submit name=btn value=add>
 
-<p></p>
-<a href="/download/">Download Updates</a>
+        <p></p>
+        <a href="/download/">Download Updates</a>
 
         <p></p>
         {% if s != None %}
@@ -39,6 +48,7 @@
   th { border: solid thin; height: 10px; width: 500px; text-align: left; padding: 15px; background-color: #00b8de;  color: white;}
   td { border: solid thin; height: 10px; width: 500px; text-align: left; padding: 15px; }
   tr:nth-child(even){background-color: #f2f2f2}
+
 
             </style>
             <table>

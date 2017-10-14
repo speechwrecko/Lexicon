@@ -5,23 +5,26 @@ from database import InsertRow, ExportCSV
 import sqlite3
 import time
 import csv
+import tkinter as tk
+from tkinter import filedialog
 
-#!/usr/bin/env python
+# !/usr/bin/env python
 
 app = Flask(__name__)
+
 
 # Model
 class InputForm(Form):
     r = StringField('r', validators=[validators.optional()])
     w = StringField('w', validators=[validators.required()])
     p = StringField('p', validators=[validators.required()])
-    #, validators.length(min=1), validators.InputRequired()
-
+    g = StringField('g', validators=[validators.required()])
 
 
 # Lexicon
 def LoadLexicon(Path):
     return sqlite3.connect(Path)
+
 
 @app.route('/download/')
 def download():
@@ -38,33 +41,69 @@ def download():
     redirect(url_for('index', ))
     return response
 
+
 # View
 @app.route('/lexicon', methods=['GET', 'POST'])
 def index():
     db = LoadLexicon('DB\lexicon_3_28_17.db')
     form = InputForm(request.form)
-    if request.method == 'POST':# and form.validate():
+    if request.method == 'POST':  # and form.validate():
         s = None
         if request.form['btn'] == 'search':
             w = None
             p = None
+            g = None
             r = form.r.data
             s = compute(r, db)
         elif request.form['btn'] == 'add' and form.validate():
-            r= None
+            r = None
             s = None
+            g = None
             w = form.w.data
             p = form.p.data
             date = time.strftime("%m/%d/%Y")
             source = 'user'
-            row = (w,p,date,source)
+            row = (w, p, date, source)
             InsertRow(db, row)
+        elif request.form['btn'] == 'open':  # and form.validate():
+            r = None
+            w = None
+            p = None
+            s = None
+            root = tk.Tk()
+            root.withdraw()
+            form.g.data = filedialog.askopenfilename()
+        elif request.form['btn'] == 'submit':  # and form.validate():
+            r = None
+            w = None
+            p = None
+            s = None
+            with open(form.g.data, 'r', newline='') as f:
+                reader = csv.reader(f, dialect=csv.excel_tab)
+                file_list = list(reader)
+                f.close()
+            for files in file_list:
+                out = compute(files[0], db)
+                if len(out) == 0:
+                    with open('eggs.csv', 'w') as csvfile:
+                        spamwriter = csv.writer(csvfile, dialect=csv.excel_tab)
+                        spamwriter.writerow([files[0]])
+                        csvfile.close()
+                        # We need to modify the response, so the first thing we
+                        # need to do is create a response out of the CSV string
+                        response = make_response(open('eggs.csv').read())
+                        # This is the key: Set the right header for the response
+                        # to be downloaded, instead of just printed on the browser
+                        response.headers["Content-Disposition"] = "attachment; filename=eggs.csv"
+                        redirect(url_for('index', ))
+                        return response
 
     else:
         r = None
-        s = None
+        g = None
         w = None
         p = None
+        s = None
 
     db.close()
 
