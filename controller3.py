@@ -1,16 +1,21 @@
 from flask import Flask, render_template, request, redirect, url_for, make_response
+from werkzeug import secure_filename
 from wtforms import Form, StringField, validators
 from compute import compute
 from database import InsertRow, ExportCSV
 import sqlite3
 import time
 import csv
-import tkinter as tk
-from tkinter import filedialog
+import os
 
 # !/usr/bin/env python
 
+UPLOAD_FOLDER = './'
+ALLOWED_EXTENSIONS = set(['csv'])
+
+
 app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 
 # Model
@@ -24,6 +29,10 @@ class InputForm(Form):
 # Lexicon
 def LoadLexicon(Path):
     return sqlite3.connect(Path)
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 
 @app.route('/download/')
@@ -66,20 +75,17 @@ def index():
             source = 'user'
             row = (w, p, date, source)
             InsertRow(db, row)
-        elif request.form['btn'] == 'open':  # and form.validate():
+        elif request.form['btn'] == 'Upload':  # and form.validate():
             r = None
             w = None
             p = None
             s = None
-            root = tk.Tk()
-            root.withdraw()
-            form.g.data = filedialog.askopenfilename()
-        elif request.form['btn'] == 'submit':  # and form.validate():
-            r = None
-            w = None
-            p = None
-            s = None
-            with open(form.g.data, 'r', newline='') as f:
+            file = request.files['file']
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            with open(filepath, 'r', newline='') as f:
                 reader = csv.reader(f, dialect=csv.excel_tab)
                 file_list = list(reader)
                 f.close()
@@ -95,10 +101,10 @@ def index():
                 csvfile.close()
                 # We need to modify the response, so the first thing we
                 # need to do is create a response out of the CSV string
-                response = make_response(open('eggs.csv').read())
+                response = make_response(open('outofvocabulary.csv').read())
                 # This is the key: Set the right header for the response
                 # to be downloaded, instead of just printed on the browser
-                response.headers["Content-Disposition"] = "attachment; filename=eggs.csv"
+                response.headers["Content-Disposition"] = "attachment; filename=outofvocabulary.csv"
                 redirect(url_for('index', ))
                 return response
 

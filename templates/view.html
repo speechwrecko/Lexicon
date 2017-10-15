@@ -6,7 +6,7 @@
 </head>
 <body>
 
-<form method=post action="">
+<form method=post action="" enctype=multipart/form-data>
 
     <div align="left">
         <h1>Lexicon Search</h1>
@@ -21,9 +21,10 @@
         <p></p>
 
         Bulk Upload:
-        {{ form.g }}
-        <input type=submit name=btn value=open>
-        <input type=submit name=btn value=submit>
+             <input type=file name=file>
+             <P></P>
+             <input type=submit name=btn value=Upload>
+
 
 
         <p></p>
