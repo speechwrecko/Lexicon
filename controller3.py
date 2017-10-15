@@ -89,7 +89,7 @@ def index():
                     out = compute(word, db)
                     if len(out) == 0:
                         missing_words.append(word)
-            with open('eggs.csv', 'w', newline='') as csvfile:
+            with open('outofvocabulary.csv', 'w', newline='') as csvfile:
                 spamwriter = csv.writer(csvfile, dialect=csv.excel_tab)
                 spamwriter.writerows(missing_words)
                 csvfile.close()
