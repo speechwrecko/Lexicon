@@ -7,6 +7,8 @@ import sqlite3
 import time
 import csv
 import os
+import string
+import re
 
 # !/usr/bin/env python
 
@@ -92,12 +94,20 @@ def index():
             for files in file_list:
                 words = ' '.join(files).split(' ')
                 for word in words:
+                    word = word.lower()
+                    word = word.strip()
+                    #translator = str.maketrans('', '', string.punctuation)
+                    #word = word.translate(translator)
+                    word = re.sub("[^\w^\s^\'^\-]+",'',word)
                     out = compute(word, db)
                     if len(out) == 0:
                         missing_words.append(word)
             with open('outofvocabulary.csv', 'w', newline='') as csvfile:
                 spamwriter = csv.writer(csvfile, dialect=csv.excel_tab)
-                spamwriter.writerows(missing_words)
+                missing_words = (set(missing_words))
+                #spamwriter.writerows(missing_words)
+                for item in missing_words:
+                    spamwriter.writerow([item])
                 csvfile.close()
                 # We need to modify the response, so the first thing we
                 # need to do is create a response out of the CSV string
