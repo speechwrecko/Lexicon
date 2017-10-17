@@ -7,17 +7,18 @@ import sqlite3
 import time
 import csv
 import os
-import string
+#import string
 import re
 
 # !/usr/bin/env python
 
-UPLOAD_FOLDER = './'
+UPLOAD_FOLDER_NT = './'
+UPLOAD_FOLDER_POSIX = ''
 ALLOWED_EXTENSIONS = set(['csv'])
 
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER_NT
 
 
 # Model
@@ -39,7 +40,10 @@ def allowed_file(filename):
 
 @app.route('/download/')
 def download():
-    db = LoadLexicon('DB\lexicon_3_28_17.db')
+    if os.name == 'nt':
+        db = LoadLexicon('DB\lexicon_3_28_17.db')
+    else:
+        db = LoadLexicon('DB/lexicon_3_28_17.db')
     ExportCSV(db)
     db.close()
 
@@ -57,7 +61,10 @@ def download():
 @app.route('/lexicon', methods=['GET', 'POST'])
 def index():
     missing_words = []
-    db = LoadLexicon('DB\lexicon_3_28_17.db')
+    if os.name == 'nt':
+        db = LoadLexicon('DB\lexicon_3_28_17.db')
+    else:
+        db = LoadLexicon('DB/lexicon_3_28_17.db')
     form = InputForm(request.form)
     if request.method == 'POST':  # and form.validate():
         s = None
@@ -87,10 +94,17 @@ def index():
                 filename = secure_filename(file.filename)
                 filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            with open(filepath, 'r', newline='') as f:
-                reader = csv.reader(f, dialect=csv.excel_tab)
-                file_list = list(reader)
-                f.close()
+            if os.name == 'nt':
+                with open(filepath, 'r', newline='') as f:
+                    reader = csv.reader(f, dialect=csv.excel_tab)
+                    file_list = list(reader)
+                    f.close()
+            else:
+                with open(filepath, 'r') as f:
+                    reader = csv.reader(f, dialect=csv.excel_tab)
+                    file_list = list(reader)
+                    f.close()
+
             for files in file_list:
                 words = ' '.join(files).split(' ')
                 for word in words:
@@ -102,21 +116,30 @@ def index():
                     out = compute(word, db)
                     if len(out) == 0:
                         missing_words.append(word)
-            with open('outofvocabulary.csv', 'w', newline='') as csvfile:
-                spamwriter = csv.writer(csvfile, dialect=csv.excel_tab)
-                missing_words = (set(missing_words))
-                #spamwriter.writerows(missing_words)
-                for item in missing_words:
-                    spamwriter.writerow([item])
-                csvfile.close()
-                # We need to modify the response, so the first thing we
-                # need to do is create a response out of the CSV string
-                response = make_response(open('outofvocabulary.csv').read())
-                # This is the key: Set the right header for the response
-                # to be downloaded, instead of just printed on the browser
-                response.headers["Content-Disposition"] = "attachment; filename=outofvocabulary.csv"
-                redirect(url_for('index', ))
-                return response
+            if os.name == 'nt':
+                with open('outofvocabulary.csv', 'w', newline='') as csvfile:
+                    spamwriter = csv.writer(csvfile, dialect=csv.excel_tab)
+                    missing_words = (set(missing_words))
+                    #spamwriter.writerows(missing_words)
+                    for item in missing_words:
+                        spamwriter.writerow([item])
+                    csvfile.close()
+            else:
+                with open('outofvocabulary.csv', 'w') as csvfile:
+                    spamwriter = csv.writer(csvfile, dialect=csv.excel_tab)
+                    missing_words = (set(missing_words))
+                    #spamwriter.writerows(missing_words)
+                    for item in missing_words:
+                        spamwriter.writerow([item])
+                    csvfile.close()
+            # We need to modify the response, so the first thing we
+            # need to do is create a response out of the CSV string
+            response = make_response(open('outofvocabulary.csv').read())
+            # This is the key: Set the right header for the response
+            # to be downloaded, instead of just printed on the browser
+            response.headers["Content-Disposition"] = "attachment; filename=outofvocabulary.csv"
+            redirect(url_for('index', ))
+            return response
 
     else:
         r = None
