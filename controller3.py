@@ -21,74 +21,85 @@ app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER_NT
 
 
-# Model
+# Setup a class for form fields and validators
 class InputForm(Form):
     r = StringField('r', validators=[validators.optional()])
     w = StringField('w', validators=[validators.required()])
     p = StringField('p', validators=[validators.required()])
-    g = StringField('g', validators=[validators.required()])
 
 
-# Lexicon
+# Function for loading the lexicon
 def LoadLexicon(Path):
     return sqlite3.connect(Path)
 
+# Function to check if an inputed file is of the proper type
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 
+# View fucntion for the download link in the UI
 @app.route('/download/')
 def download():
+    # Check if it is a windows machine for correct path
     if os.name == 'nt':
         db = LoadLexicon('DB\lexicon_3_28_17.db')
+    # Otherwise assume linux
     else:
         db = LoadLexicon('DB/lexicon_3_28_17.db')
+
+    # Export any user added entries to lexicon
     ExportCSV(db)
     db.close()
 
-    # We need to modify the response, so the first thing we
-    # need to do is create a response out of the CSV string
+    # Create a response out of the CSV string
     response = make_response(open('lexicon_update.csv').read())
-    # This is the key: Set the right header for the response
-    # to be downloaded, instead of just printed on the browser
+
+    # Set header of respond for downloaded
     response.headers["Content-Disposition"] = "attachment; filename=lexicon_update.csv"
+
     redirect(url_for('index', ))
     return response
 
 
-# View
+# View function for teh main form
 @app.route('/lexicon', methods=['GET', 'POST'])
 def index():
+
+    # Initialize variables and load DB
     missing_words = []
     if os.name == 'nt':
         db = LoadLexicon('DB\lexicon_3_28_17.db')
     else:
         db = LoadLexicon('DB/lexicon_3_28_17.db')
+
     form = InputForm(request.form)
     if request.method == 'POST':  # and form.validate():
         s = None
+
+        # Check is search button was pusehd
         if request.form['btn'] == 'search':
-            w = None
-            p = None
-            g = None
+            w = p = g = None
+
+            #read in form data and send SQLITE For query
             r = form.r.data
             s = compute(r, db)
+
+        #check if add button was pushed
         elif request.form['btn'] == 'add' and form.validate():
-            r = None
-            s = None
-            g = None
+            r = s =g = None
+
+            #readin form data and add to database
             w = form.w.data
             p = form.p.data
             date = time.strftime("%m/%d/%Y")
             source = 'user'
             row = (w, p, date, source)
             InsertRow(db, row)
+
+        #check if upload button was pusehd
         elif request.form['btn'] == 'Upload':  # and form.validate():
-            r = None
-            w = None
-            p = None
-            s = None
+            r = w = p = s = None
             file = request.files['file']
             if file and allowed_file(file.filename):
                 filename = secure_filename(file.filename)
